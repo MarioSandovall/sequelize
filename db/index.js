@@ -9,6 +9,9 @@ const dialect = 'postgres';
 const connection = new sequelize(database, user, password,{
   host,
   dialect,
+  define: {
+    freezeTableName:true
+  }
 });
 
 
