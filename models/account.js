@@ -17,4 +17,4 @@ const Account = connection.define('Account', {
   }
 })
 
-exports.Account = Account;
+module.exports = Account;

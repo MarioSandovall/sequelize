@@ -1,4 +1,4 @@
-const sequelize = require('sequelize');
+const Sequelize = require('sequelize');
 
 const password = '';
 const database = 'test'
@@ -6,7 +6,7 @@ const user = 'postgres';
 const host = 'localhost';
 const dialect = 'postgres';
 
-const connection = new sequelize(database, user, password,{
+const connection = new Sequelize(database, user, password,{
   host,
   dialect,
   define: {

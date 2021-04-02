@@ -3,29 +3,57 @@ const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
 const { connection } = require('./db');
-const { Account } = require('./models/account');
-const { User } = require('./models/user');
 const ACCOUNTS = require('./accounts.json');
-const { where } = require('sequelize');
+
+const Account = require('./models/account');
+const User = require('./models/user');
+const Post = require('./models/post');
+const Comment = require('./models/comment');
+const Project = require('./models/project');
 
 connection
   .sync({
     logging: console.log,
     force: true
   })
-  .then(() => {
-    User.create({
+  .then(async () => {
+    await Account.bulkCreate(ACCOUNTS);
+
+    const firstUser = await User.create({
       first: 'Mario',
       last: 'Sandoval',
       bio: 'New bio entry'
     });
-    Account.bulkCreate(ACCOUNTS)
-      .then(accounts => {
-        console.log('Success adding accounts');
-      })
-      .catch(error => {
-        console.log(error);
+
+    const secodUser = await User.create({
+      first: 'Ruben',
+      last: 'Hernandez',
+      bio: 'New bio entry'
+    });
+
+    const post = await Post.create({
+      userId: firstUser.id,
+      title: 'Fist Post',
+      content: 'post content 1',
+    });
+
+    for (let i = 1; i <= 3; i++) {
+      await Comment.create({
+        postId: post.id,
+        the_comment: 'Comment ' + i,
       });
+    }
+
+    const project = await Project.create(
+      { title: 'Project 1' }
+    );
+
+    project.setWorkers([firstUser.id, secodUser.id]);
+
+    await Project.create(
+      { title: 'Project 2' }
+    );
+
   })
   .then(() => {
     console.log('connection to database established successfully');
@@ -45,6 +73,40 @@ app.get('/', (req, res) => {
   })
     .then((user) => {
       res.json(user);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(404).send(error);
+    });
+});
+
+app.get('/post', (req, res) => {
+  Post.findAll({
+    include: [{
+      as: 'userRef',
+      model: User,
+    }]
+  })
+    .then((posts) => {
+      res.json(posts);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(404).send(error);
+    });
+});
+
+app.get('/post/:id', (req, res) => {
+  const id = req.params.id;
+  Post.findByPk(id, {
+    include: [{
+      as: 'all_comments',
+      model: Comment,
+      attributes: ['the_comment'],
+    }]
+  })
+    .then((post) => {
+      res.json(post);
     })
     .catch((error) => {
       console.log(error);
@@ -126,8 +188,6 @@ app.post('/post', (req, res) => {
       res.status(404).send(error);
     });
 });
-
-
 
 app.listen(port, () => {
   console.log('Running server on port ' + port);

@@ -1,22 +1,24 @@
-const sequelize = require('sequelize');
+const Sequelize = require('sequelize');
 const { connection } = require('../db');
 
+const Project = require('./project');
+
 const User = connection.define('User', {
-  uuid: {
-    type: sequelize.UUID,
+  id: {
     primaryKey: true,
-    defaultValue: sequelize.UUIDV4,
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV1,
   },
   first: {
-    type: sequelize.STRING,
+    type: Sequelize.STRING,
     validate: {
       len: [3],
     },
   },
-  last: sequelize.STRING,
-  full_name: sequelize.STRING,
+  last: Sequelize.STRING,
+  full_name: Sequelize.STRING,
   bio: {
-    type: sequelize.TEXT,
+    type: Sequelize.TEXT,
     validate: {
       contains: {
         args: ['bio'],
@@ -43,4 +45,8 @@ const User = connection.define('User', {
   }
 });
 
-exports.User = User;
+// Creates a UserProjects table with Ids for ProjectId and UserId
+User.belongsToMany(Project, { as: 'Tasks', through: 'UserProjects' });
+Project.belongsToMany(User, { as: 'Workers', through: 'UserProjects' });
+
+module.exports = User;
